@@ -119,4 +119,21 @@ public class ActionStack {
 
         return null;
     }
+    // CLEAR ALL RECORDED HISTORY
+public void clearHistory() {
+
+    // Clear the undo stack
+    for (int i = 0; i <= top; i++) {
+        actions[i] = null;
+    }
+
+    top = -1;
+
+    // Clear the recorded history
+    for (int i = 0; i < historyCount; i++) {
+        history[i] = null;
+    }
+
+    historyCount = 0;
+}
 }

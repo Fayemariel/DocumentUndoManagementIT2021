@@ -18,7 +18,8 @@ public class DocumentWindow extends JFrame {
 
     private JButton btnSave;
     private JButton btnUndo;
-    private JButton btnClear;
+    private JButton btnClearText;
+    private JButton btnClearHistory;
     private JButton btnSearch;
 
     // Constructor
@@ -28,7 +29,7 @@ public class DocumentWindow extends JFrame {
         actionStack = new ActionStack();
 
         setTitle("Document Undo Management");
-        setSize(750, 650);
+        setSize(750, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -57,8 +58,7 @@ public class DocumentWindow extends JFrame {
         add(title, BorderLayout.NORTH);
 
         // MAIN PANEL
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BorderLayout(10, 10));
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(
             BorderFactory.createEmptyBorder(15, 15, 15, 15)
         );
@@ -74,20 +74,19 @@ public class DocumentWindow extends JFrame {
         txtDocument.setLineWrap(true);
         txtDocument.setWrapStyleWord(true);
 
-        JScrollPane editorScroll =
-            new JScrollPane(txtDocument);
+        JScrollPane editorScroll = new JScrollPane(txtDocument);
 
         editorPanel.add(editorLabel, BorderLayout.NORTH);
         editorPanel.add(editorScroll, BorderLayout.CENTER);
 
-        // BUTTONS
+        // EDITOR BUTTONS
         JPanel buttonPanel = new JPanel(
             new FlowLayout(FlowLayout.CENTER, 10, 5)
         );
 
         btnSave = new JButton("Save Edit");
         btnUndo = new JButton("Undo");
-        btnClear = new JButton("Clear Document");
+        btnClearText = new JButton("Clear Text");
 
         btnSave.setBackground(new Color(37, 99, 235));
         btnSave.setForeground(Color.WHITE);
@@ -95,14 +94,14 @@ public class DocumentWindow extends JFrame {
         btnUndo.setBackground(new Color(71, 85, 105));
         btnUndo.setForeground(Color.WHITE);
 
-        btnClear.setBackground(new Color(220, 38, 38));
-        btnClear.setForeground(Color.WHITE);
+        btnClearText.setBackground(new Color(220, 38, 38));
+        btnClearText.setForeground(Color.WHITE);
 
         buttonPanel.add(btnSave);
         buttonPanel.add(btnUndo);
-        buttonPanel.add(btnClear);
+        buttonPanel.add(btnClearText);
 
-        // HISTORY SEARCH
+        // HISTORY PANEL
         JPanel historyPanel = new JPanel(new BorderLayout(5, 5));
 
         JLabel historyLabel =
@@ -112,8 +111,8 @@ public class DocumentWindow extends JFrame {
             new Font("Arial", Font.BOLD, 16)
         );
 
+        // SEARCH FIELD AND BUTTON
         txtSearch = new JTextField();
-
         btnSearch = new JButton("Search");
 
         JPanel searchPanel = new JPanel(new BorderLayout(5, 5));
@@ -125,15 +124,36 @@ public class DocumentWindow extends JFrame {
         txtHistory.setEditable(false);
         txtHistory.setFont(new Font("Arial", Font.PLAIN, 13));
 
-        JScrollPane historyScroll =
-            new JScrollPane(txtHistory);
+        JScrollPane historyScroll = new JScrollPane(txtHistory);
 
-        historyPanel.add(historyLabel, BorderLayout.NORTH);
-        historyPanel.add(searchPanel, BorderLayout.CENTER);
-        historyPanel.add(historyScroll, BorderLayout.SOUTH);
+        // HISTORY TOP SECTION
+        JPanel historyTopPanel = new JPanel(
+            new BorderLayout(5, 5)
+        );
+
+        historyTopPanel.add(historyLabel, BorderLayout.NORTH);
+        historyTopPanel.add(searchPanel, BorderLayout.SOUTH);
+
+        // CLEAR HISTORY BUTTON
+        JPanel clearHistoryPanel = new JPanel(
+            new FlowLayout(FlowLayout.RIGHT)
+        );
+
+        btnClearHistory = new JButton("Clear History");
+        btnClearHistory.setBackground(new Color(220, 38, 38));
+        btnClearHistory.setForeground(Color.WHITE);
+
+        clearHistoryPanel.add(btnClearHistory);
+
+        // Arrange history components
+        historyPanel.add(historyTopPanel, BorderLayout.NORTH);
+        historyPanel.add(historyScroll, BorderLayout.CENTER);
+        historyPanel.add(clearHistoryPanel, BorderLayout.SOUTH);
 
         // COMBINE PANELS
-        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
+        JPanel centerPanel = new JPanel(
+            new BorderLayout(10, 10)
+        );
 
         centerPanel.add(editorPanel, BorderLayout.CENTER);
         centerPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -144,6 +164,7 @@ public class DocumentWindow extends JFrame {
         add(mainPanel, BorderLayout.CENTER);
 
         // BUTTON EVENTS
+
         btnSave.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 saveEdit();
@@ -156,7 +177,7 @@ public class DocumentWindow extends JFrame {
             }
         });
 
-        btnClear.addActionListener(new ActionListener() {
+        btnClearText.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 clearDocument();
             }
@@ -165,6 +186,12 @@ public class DocumentWindow extends JFrame {
         btnSearch.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 searchHistory();
+            }
+        });
+
+        btnClearHistory.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                clearActionHistory();
             }
         });
 
@@ -191,13 +218,13 @@ public class DocumentWindow extends JFrame {
         if (actionStack.push(action)) {
 
             document.setContent(newText);
-
             updateHistory();
 
             JOptionPane.showMessageDialog(
                 this,
                 "Edit saved successfully!"
             );
+
         } else {
             JOptionPane.showMessageDialog(
                 this,
@@ -212,17 +239,14 @@ public class DocumentWindow extends JFrame {
         DocumentAction action = actionStack.pop();
 
         if (action == null) {
-
             JOptionPane.showMessageDialog(
                 this,
                 "No saved edits to undo."
             );
-
             return;
         }
 
         document.setContent(action.undo());
-
         txtDocument.setText(document.getContent());
 
         updateHistory();
@@ -233,18 +257,16 @@ public class DocumentWindow extends JFrame {
         );
     }
 
-    // CLEAR DOCUMENT
+    // CLEAR DOCUMENT TEXT
     private void clearDocument() {
 
         String oldText = document.getContent();
 
         if (oldText.isEmpty()) {
-
             JOptionPane.showMessageDialog(
                 this,
                 "The document is already empty."
             );
-
             return;
         }
 
@@ -260,8 +282,9 @@ public class DocumentWindow extends JFrame {
 
             JOptionPane.showMessageDialog(
                 this,
-                "Document cleared successfully!"
+                "Document text cleared successfully!"
             );
+
         } else {
             JOptionPane.showMessageDialog(
                 this,
@@ -276,12 +299,10 @@ public class DocumentWindow extends JFrame {
         String keyword = txtSearch.getText().trim();
 
         if (keyword.isEmpty()) {
-
             JOptionPane.showMessageDialog(
                 this,
                 "Please enter a keyword."
             );
-
             return;
         }
 
@@ -296,9 +317,7 @@ public class DocumentWindow extends JFrame {
             DocumentAction action =
                 actionStack.getHistoryAction(i);
 
-            String description =
-                action.getDescription();
-
+            String description = action.getDescription();
             String text = action.getNewText();
 
             if (description.toLowerCase().contains(
@@ -337,6 +356,31 @@ public class DocumentWindow extends JFrame {
                 (i + 1) + ". "
                 + action.getDescription()
                 + "\n"
+            );
+        }
+    }
+
+    // CLEAR ACTION HISTORY
+    private void clearActionHistory() {
+
+        int choice = JOptionPane.showConfirmDialog(
+            this,
+            "Are you sure you want to delete all recorded actions?",
+            "Clear History",
+            JOptionPane.YES_NO_OPTION
+        );
+
+        if (choice == JOptionPane.YES_OPTION) {
+
+            actionStack.clearHistory();
+
+            updateHistory();
+
+            txtSearch.setText("");
+
+            JOptionPane.showMessageDialog(
+                this,
+                "Action history cleared successfully!"
             );
         }
     }
